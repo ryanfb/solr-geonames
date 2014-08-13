@@ -28,11 +28,14 @@ import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 
+import org.apache.lucene.search.BoostingQuery;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.core.CoreContainer;
@@ -41,7 +44,6 @@ import org.apache.solr.core.SolrConfig;
 import org.apache.solr.core.SolrCore;
 import org.apache.solr.core.SolrResourceLoader;
 import org.apache.solr.schema.IndexSchema;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,9 +66,14 @@ public class Harvester {
     private static String SOLR_CONFIG = "solrconfig.xml";
     private static String SOLR_SCHEMA = "schema.xml";
 
-    /** Solr Country Code */
-    private static String COUNTRY_BOOST = "AU";
+    /** If true, loading alternate names */
+	private static boolean withAlternateNames;
 
+	private static String geonamesFileName;
+
+    /** Solr comma separated value of countries codes to boost. */
+    private static List<String> countryIdsToBoost;
+    
     /** Buffered Reader for line by line */
     private BufferedReader reader;
 
@@ -80,7 +87,7 @@ public class Harvester {
         columns.put("id",             0);
         columns.put("utf8_name",      1);
         columns.put("basic_name",     2);
-        // Skip altername names     : 3
+        columns.put("alternate_names",3);
         columns.put("latitude",       4);
         columns.put("longitude",      5);
         columns.put("feature_class",  6);
@@ -94,6 +101,7 @@ public class Harvester {
         columns.put("timezone",       17);
         columns.put("date_modified",  18);
     }
+    private List<String> columnsToExclude;
 
     /** Solr index */
     private SolrCore solrCore;
@@ -102,15 +110,20 @@ public class Harvester {
 
     /**
      * Basic constructor. Instantiate our reader and Solr.
-     *
      * @param sourceFile: The input file to read
+     * @param countryIdsToBoost Country identifiers to boost. 
+     * @param withAlternateNames Load alternate names field.
+     *
      * @throws Exception if any errors occur
      */
-    public Harvester(File sourceFile) throws Exception {
+    public Harvester(File sourceFile, List<String> countryIdsToBoost, List<String> columnsToExclude) throws Exception {
+        this.countryIdsToBoost = countryIdsToBoost;
+        this.columnsToExclude = columnsToExclude;
+        
         // Variables
         InputStream inStream = null;
         Reader fileReader = null;
-
+        
         // Open a stream to file
         try {
             inStream = new FileInputStream(sourceFile);
@@ -321,6 +334,10 @@ public class Harvester {
 
         SolrInputDocument doc = new SolrInputDocument();
         for (String key : columns.keySet()) {
+        	if(columnsToExclude.contains(key)) {
+        		continue;
+        	}
+        		
             String data = get(row, key);
             // Fix dates
             if (key.equals("date_modified")) {
@@ -340,8 +357,8 @@ public class Harvester {
                 doc.addField("basic_name_rev", rev);
             }
             // Boost some countries
-            if (key.equals("country_code")) {
-                if (data.equals(COUNTRY_BOOST)) {
+            if (countryIdsToBoost != null && key.equals("country_code")) {
+                if (countryIdsToBoost.contains(data)) {
                     boost *= 5;
                 }
             }
@@ -384,23 +401,34 @@ public class Harvester {
      * @param args: Array of String parameters from the command line
      */
     public static void main(String[] args) {
-        // Make we were given an appropriate parameter
-        if (args.length < 1) {
-            log.error("ERROR: Usage requires input file!");
-            return;
+    	if (args.length == 0) {
+    		usage();
+    	}
+    	
+    	// Eval input parameter
+    	for (String arg : args) {
+            evalParam(arg);
         }
 
-        // Validate it
-        File file = new File(args[0]);
+        // Validate mandatory parameter
+        File file = new File(geonamesFileName);
         if (file == null || !file.exists()) {
             log.error("ERROR: The input file does not exist!");
+            usage();
             return;
         }
-
+        
+        // Exclude or not alternate names
+        List<String> columnsToExclude = new ArrayList<String>();
+        if (!withAlternateNames) {
+        	columnsToExclude.add("alternate_names");
+        }
+                
         // Get ready to harvest
         Harvester harvester = null;
         try {
-            harvester = new Harvester(file);
+            harvester = new Harvester(file, countryIdsToBoost, columnsToExclude);
+
         } catch (Exception ex) {
             // A reason for death was logged in the constructor
             log.error("Stack trace: ", ex);
@@ -461,4 +489,27 @@ public class Harvester {
 
         harvester.shutdown();
     }
+
+	private static void usage() {
+		StringBuffer msg = new StringBuffer();
+		msg.append("GeoNames solr harvester. Usage:\n");
+		msg.append("  harvest.sh [--withAlternateNames] [--countryIdsToBoost=AU,FR] geonames-dump.txt\n");
+		msg.append("\n");
+		msg.append("    geonames-dump.txt: input file to ingest (mandatory). This input file is \n");
+		msg.append("                       expected to be a tab delimited geonames data dump\n");
+		msg.append("    --withAlternateNames: to load alternate names field\n");
+		msg.append("    --countryIdsToBoost: a comma separated list of country identifiers to boost\n");
+		log.info(msg.toString());		
+	}
+
+	private static void evalParam(String arg) {
+		if (arg.startsWith("--withAlternateNames")) {
+			withAlternateNames = true;
+		} else if (arg.startsWith("--countryIdsToBoost")) {
+			countryIdsToBoost = Arrays.asList(arg.split(","));
+		} else {
+			geonamesFileName = arg;
+		}
+		
+	}
 }

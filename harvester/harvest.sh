@@ -19,7 +19,8 @@ if [ -f $1 ]; then
     MAVEN_ARGS="$*"
     SOLR_HOME="-Dgeonames.solr.home=$PROGRAM_DIR/solr"
     export MAVEN_OPTS="-XX:MaxPermSize=512m -Xmx1024m"
-	mvn $MAVEN_ARGS $SOLR_HOME \
+
+    mvn $MAVEN_ARGS $SOLR_HOME \
 		-Dexec.args="$PROGRAM_DIR/$INPUT_FILE" \
 		-Dexec.mainClass=com.googlecode.solrgeonames.harvester.Harvester \
 		exec:java

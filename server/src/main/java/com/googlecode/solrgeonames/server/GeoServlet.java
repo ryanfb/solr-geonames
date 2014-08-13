@@ -169,9 +169,13 @@ public class GeoServlet extends HttpServlet {
             query = "boost:boost^10";
         }
 
+        // .. and a field to search in
+        String field = req.getParameter("f");
+
+        
         // Or build our query
         if (query == null) {
-            query = buildWeightedQuery(q.toLowerCase());
+            query = buildWeightedQuery(q.toLowerCase(), field == null ? "basic_name" : field);
         }
 
         // Start index
@@ -256,17 +260,24 @@ public class GeoServlet extends HttpServlet {
      * @param q: The search term(s)
      * @return String: Constructed response String
      */
-    private String buildWeightedQuery(String q) {
-        String rev = new StringBuffer(q).reverse().toString();
-        // Perfect matches win
-        String both = "(basic_name_str:("+q+"*) AND basic_name_rev:("+rev+"*))";
-        // Then left-anchored matches
-        String left = "(basic_name_str:("+q+"*))";
-        // Then anything else
-        String name = "(basic_name:("+q+"*) OR basic_name:("+q+"))";
+    private String buildWeightedQuery(String q, String field) {
+
         // Now some hardcoded boosting as we put it together
         String boost = "boost:boost^10";
-        return "("+both+"^10 OR "+left+"^4 OR "+name+")^0.2"+" AND "+boost;
+        
+    	if(field.equals("alternate_names")) {
+    		String name = "(alternate_names:("+q+"*) OR alternate_names:("+q+"))";
+    		return "("+name+")^0.2"+" AND "+boost;
+    	} else {
+	        String rev = new StringBuffer(q).reverse().toString();
+	        // Perfect matches win
+	        String both = "(basic_name_str:("+q+"*) AND basic_name_rev:("+rev+"*))";
+	        // Then left-anchored matches
+	        String left = "(basic_name_str:("+q+"*))";
+	        // Then anything else
+	        String name = "(basic_name:("+q+"*) OR basic_name:("+q+"))";
+	        return "("+both+"^10 OR "+left+"^4 OR "+name+")^0.2"+" AND "+boost;
+    	}
     }
 
     /**
@@ -291,7 +302,6 @@ public class GeoServlet extends HttpServlet {
             renderer.init(request);
             return renderer;
         }
-
         // At this point the format is either invalid,
         // or HTML, we are using HTML either way
         if (function != null && function.equals("detail")) {

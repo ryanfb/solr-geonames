@@ -21,6 +21,7 @@
   <fields>
     <field name="id"            type="string" indexed="true" stored="true" required="true" />
     <field name="basic_name"    type="text"   indexed="true" stored="true" required="true" omitNorms="false" />
+    <field name="alternate_names"     type="text"   multiValued="true" indexed="true" stored="true" />
     <field name="utf8_name"     type="text"   indexed="true" stored="true" />
     <field name="latitude"      type="sfloat" indexed="true" stored="true" />
     <field name="longitude"     type="sfloat" indexed="true" stored="true" />
