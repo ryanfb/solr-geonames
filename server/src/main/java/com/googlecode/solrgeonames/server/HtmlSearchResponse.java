@@ -97,6 +97,6 @@ public class HtmlSearchResponse implements OpenSearchResponse {
      */
     @Override
     public String contentType() {
-        return "text/html";
+        return "text/html;charset=UTF-8";
     }
 }

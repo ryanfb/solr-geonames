@@ -30,6 +30,8 @@ import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
 
+import org.apache.commons.lang.StringEscapeUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -168,6 +170,9 @@ public class GeoServlet extends HttpServlet {
         if (q == null || q.equals("")) {
             query = "boost:boost^10";
         }
+        else {
+            q = StringEscapeUtils.unescapeHtml(q);
+        }
 
         // .. and a field to search in
         String field = req.getParameter("f");
@@ -271,9 +276,9 @@ public class GeoServlet extends HttpServlet {
     	} else {
 	        String rev = new StringBuffer(q).reverse().toString();
 	        // Perfect matches win
-	        String both = "(basic_name_str:("+q+"*) AND basic_name_rev:("+rev+"*))";
+	        String both = "((basic_name_str:("+q+"*) AND basic_name_rev:("+rev+"*)) OR utf8_name:("+q+"))";
 	        // Then left-anchored matches
-	        String left = "(basic_name_str:("+q+"*))";
+	        String left = "(basic_name_str:("+q+"*) OR utf8_name:("+q+"*))";
 	        // Then anything else
 	        String name = "(basic_name:("+q+"*) OR basic_name:("+q+"))";
 	        return "("+both+"^10 OR "+left+"^4 OR "+name+")^0.2"+" AND "+boost;

@@ -23,6 +23,8 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 
+import org.apache.commons.lang.StringEscapeUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,7 +81,7 @@ public class HtmlDetailResponse implements OpenSearchResponse {
             if (object instanceof Date) {
                 value = ((Date) object).toString();
             }
-            output += "<b>"+key+"</b>: "+value+"<br/>";
+            output += "<b>"+StringEscapeUtils.escapeHtml(key)+"</b>: "+StringEscapeUtils.escapeHtml(value)+"<br/>";
         }
         output += "</p>";
         return output;
@@ -113,6 +115,6 @@ public class HtmlDetailResponse implements OpenSearchResponse {
      */
     @Override
     public String contentType() {
-        return "text/html";
+        return "text/html;charset=UTF-8";
     }
 }

@@ -27,6 +27,8 @@ import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 
+import org.apache.commons.lang.StringEscapeUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -224,15 +226,7 @@ public class JsonSearchResponse implements OpenSearchResponse {
      * @return String: The key value pair escape, quoted and joined
      */
     private String escape(String key, String value) {
-        key = key.replace("\"", "\\\"");
-        key = key.replace("\\", "\\\\");
-        if (value == null) {
-        	value = "";
-        }
-        value = value.replace("\"", "\\\"");
-        value = value.replace("\\", "\\\\");
-
-        return "\""+key+"\": \""+value+"\"";
+        return "\""+StringEscapeUtils.escapeJavaScript(key)+"\": \""+StringEscapeUtils.escapeJavaScript(value)+"\"";
     }
 
     /**
@@ -255,6 +249,6 @@ public class JsonSearchResponse implements OpenSearchResponse {
      */
     @Override
     public String contentType() {
-        return "application/json";
+        return "application/json;charset=UTF-8";
     }
 }

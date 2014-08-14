@@ -161,6 +161,6 @@ public class JsonDetailResponse implements OpenSearchResponse {
      */
     @Override
     public String contentType() {
-        return "application/json";
+        return "application/json;charset=UTF-8";
     }
 }
