@@ -18,7 +18,10 @@
  */
 package com.googlecode.solrgeonames.server;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
@@ -80,6 +83,19 @@ public class HtmlDetailResponse implements OpenSearchResponse {
             }
             if (object instanceof Date) {
                 value = ((Date) object).toString();
+            }
+            if (object instanceof List) {
+                List<String> multiValue = (ArrayList<String>) object;
+                StringBuffer sb = new StringBuffer();
+                for (Iterator iterator = multiValue.iterator(); iterator
+                        .hasNext();) {
+                    String string = (String) iterator.next();
+                    sb.append(string);
+                    if (iterator.hasNext()) {
+                        sb.append(", "); 
+                    }
+                }
+                value = sb.toString();
             }
             output += "<b>"+StringEscapeUtils.escapeHtml(key)+"</b>: "+StringEscapeUtils.escapeHtml(value)+"<br/>";
         }

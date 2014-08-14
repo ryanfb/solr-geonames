@@ -20,12 +20,15 @@ package com.googlecode.solrgeonames.server;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
+
+import org.apache.commons.lang.StringEscapeUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -124,8 +127,21 @@ public class JsonDetailResponse implements OpenSearchResponse {
             if (object instanceof Date) {
                 value = ((Date) object).toString();
             }
-            key = key.replace("\"", "\\\"");
-            value = value.replace("\"", "\\\"");
+            if (object instanceof List) {
+                List<String> multiValue = (ArrayList<String>) object;
+                StringBuffer sb = new StringBuffer();
+                for (Iterator iterator = multiValue.iterator(); iterator
+                        .hasNext();) {
+                    String string = (String) iterator.next();
+                    sb.append(string);
+                    if (iterator.hasNext()) {
+                        sb.append(", "); 
+                    }
+                }
+                value = sb.toString();
+            }
+            key = StringEscapeUtils.escapeJavaScript(key);
+            value = StringEscapeUtils.escapeJavaScript(value);
             output += "\""+key+"\": \""+value+"\"";
         }
         return "{\n"+output+"\n}";
