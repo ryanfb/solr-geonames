@@ -13,6 +13,10 @@
     <name>Geonames Solr Index - Harvester</name>
     <url>http://code.google.com/p/solr-geonames/</url>
 
+    <properties>
+      <luceneMatchVersion>3.6.1</luceneMatchVersion>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -38,7 +42,7 @@
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-core</artifactId>
-            <version>3.3.0</version>
+            <version>3.6.1</version>
             <exclusions>
                 <exclusion>
                     <groupId>commons-logging</groupId>
@@ -53,7 +57,7 @@
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>
-            <version>3.3.0</version>
+            <version>3.6.1</version>
             <exclusions>
                 <exclusion>
                     <groupId>log4j</groupId>

@@ -3,17 +3,12 @@
   <abortOnConfigurationError>true</abortOnConfigurationError>
   <dataDir>${geonames.solr.home:./solr}/data</dataDir>
 
-  <indexDefaults>
-    <useCompoundFile>false</useCompoundFile>
-    <mergeFactor>25</mergeFactor>
-    <ramBufferSizeMB>128</ramBufferSizeMB>
+  <indexConfig>
     <maxFieldLength>10000</maxFieldLength>
     <writeLockTimeout>1000</writeLockTimeout>
     <commitLockTimeout>10000</commitLockTimeout>
     <lockType>native</lockType>
-  </indexDefaults>
 
-  <mainIndex>
     <useCompoundFile>false</useCompoundFile>
     <ramBufferSizeMB>128</ramBufferSizeMB>
     <mergeFactor>25</mergeFactor>
@@ -24,8 +19,9 @@
       <str name="maxOptimizedCommitsToKeep">0</str>
     </deletionPolicy>
     <infoStream file="INFOSTREAM.txt">false</infoStream>
-  </mainIndex>
+  </indexConfig>
 
   <updateHandler class="solr.DirectUpdateHandler2"></updateHandler>
   <requestHandler name="/update" class="solr.XmlUpdateRequestHandler" />
+  <luceneMatchVersion>LUCENE_36</luceneMatchVersion>
 </config>

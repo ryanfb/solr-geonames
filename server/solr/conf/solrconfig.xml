@@ -2,6 +2,7 @@
 <config>
   <abortOnConfigurationError>true</abortOnConfigurationError>
   <dataDir>${geonames.solr.home:./solr}/data</dataDir>
+  <luceneMatchVersion>LUCENE_36</luceneMatchVersion>
 
   <!-- This index shouldn't receive updates... so these settings don't matter -->
   <indexDefaults>
