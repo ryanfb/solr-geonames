@@ -369,7 +369,15 @@ public class Harvester {
                 }
             }
             if (!empty(data)) {
-                doc.addField(key, data);
+                if (key.equals("alternate_names")) {
+                    String[] alternate_names = data.split(",");
+                    for (String alternate_name : alternate_names) {
+                        doc.addField(key, alternate_name);
+                    }
+                }
+                else {
+                    doc.addField(key, data);
+                }
             }
         }
         // We are placing the boost on a field that all records have the same
