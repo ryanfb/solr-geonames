@@ -47,6 +47,8 @@ import org.apache.solr.schema.IndexSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ibm.icu.text.Transliterator;
+
 /**
  * A harvester to parse and index the geo data into an embedded Solr index.
  *
@@ -58,6 +60,8 @@ public class Harvester {
 
     /** Geonames uses tab-delimited files */
     private static String DELIMITER = "\t";
+
+    private static Transliterator inputTransliterator = Transliterator.getInstance("Any-Latin; Lower; NFD; [:Nonspacing Mark:] Remove; [:Punctuation:] Remove; NFC");
 
     /** Some constant counters */
     private static int BATCH_SIZE = 20000;
@@ -234,6 +238,17 @@ public class Harvester {
     }
 
     /**
+     * Normalize an input string by converting to Latin, stripping accents and 
+     * punctuation, then converting to NFC.
+     *
+     * @param input: input string
+     * @return String: normalized input string
+     */
+    private String normalizeInput(String input) {
+        return inputTransliterator.transliterate(input);
+    }
+
+    /**
      * Force a commit against the underlying Solr database.
      *
      */
@@ -343,13 +358,19 @@ public class Harvester {
             if (key.equals("date_modified")) {
                 data += "T00:00:00Z";
             }
-            // Sometimes the geonames 'asciiname' is empty
+            if (key.equals("utf8_name")) {
+                if (!empty(data)) {
+                    doc.addField("normalized_names", normalizeInput(data));
+                }
+            }
             if (key.equals("basic_name")) {
+                // Sometimes the geonames 'asciiname' is empty
                 if (empty(data)) {
                     data = get(row, "utf8_name");
                     //log.warn("{}: ASCII Name missing," +
                     //       " using UTF-8 version: '{}'", now(), data);
                 }
+                doc.addField("normalized_names", normalizeInput(data));
                 // We need a 'string' version, and a reversed thereof
                 String string = data.toLowerCase();
                 doc.addField("basic_name_str", string);
@@ -373,6 +394,7 @@ public class Harvester {
                     String[] alternate_names = data.split(",");
                     for (String alternate_name : alternate_names) {
                         doc.addField(key, alternate_name);
+                        doc.addField("normalized_names", normalizeInput(alternate_name));
                     }
                 }
                 else {

@@ -32,6 +32,8 @@ import org.apache.solr.client.solrj.response.QueryResponse;
 
 import org.apache.commons.lang.StringEscapeUtils;
 
+import com.ibm.icu.text.Transliterator;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +48,8 @@ public class GeoServlet extends HttpServlet {
 
     public static String DEFAULT_START = "0";
     public static String DEFAULT_ROWS = "20";
+
+    private static Transliterator inputTransliterator = Transliterator.getInstance("Any-Latin; Lower; NFD; [:Nonspacing Mark:] Remove; [:Punctuation:] Remove; NFC");
 
     private EmbeddedSolrServer solrServer;
 
@@ -280,7 +284,7 @@ public class GeoServlet extends HttpServlet {
 	        // Then left-anchored matches
 	        String left = "(basic_name_str:("+q+"*) OR utf8_name:("+q+"*))";
 	        // Then anything else
-	        String name = "(basic_name:("+q+"*) OR basic_name:("+q+") OR alternate_names:("+q+"*) OR alternate_names:("+q+"))";
+	        String name = "(basic_name:("+q+"*) OR basic_name:("+q+") OR alternate_names:("+q+"*) OR alternate_names:("+q+") OR normalized_names:("+inputTransliterator.transliterate(q)+"))";
 	        return "("+both+"^10 OR "+left+"^4 OR "+name+")^0.2"+" AND "+boost;
     	}
     }
