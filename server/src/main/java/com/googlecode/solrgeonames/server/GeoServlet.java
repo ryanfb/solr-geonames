@@ -280,7 +280,7 @@ public class GeoServlet extends HttpServlet {
 	        // Then left-anchored matches
 	        String left = "(basic_name_str:("+q+"*) OR utf8_name:("+q+"*))";
 	        // Then anything else
-	        String name = "(basic_name:("+q+"*) OR basic_name:("+q+"))";
+	        String name = "(basic_name:("+q+"*) OR basic_name:("+q+") OR alternate_names:("+q+"*) OR alternate_names:("+q+"))";
 	        return "("+both+"^10 OR "+left+"^4 OR "+name+")^0.2"+" AND "+boost;
     	}
     }
